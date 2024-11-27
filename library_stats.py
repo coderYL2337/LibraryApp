@@ -7,9 +7,13 @@ class LibraryStatistics:
     def __init__(self, library):
         self.library = library
         self.borrow_history: List[Tuple[str, str, datetime]] = []  # [(isbn, user_id, date)]
+        self.return_history: List[Tuple[str, str, datetime]] = []  # [(isbn, user_id, date)]
 
     def record_borrow(self, isbn: str, user_id: str):
         self.borrow_history.append((isbn, user_id, datetime.now()))
+        
+    def record_return(self, isbn: str, user_id: str):
+        self.return_history.append((isbn, user_id, datetime.now()))
 
     def get_most_popular_books(self, limit: int = 5) -> List[Tuple[str, int]]:
         book_borrows = Counter(isbn for isbn, _, _ in self.borrow_history)
