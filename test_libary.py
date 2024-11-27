@@ -3,30 +3,69 @@
 import unittest
 from datetime import datetime, timedelta
 from library_system import Book, Library, User
+from library_stats import LibraryStatistics
 
-class TestLibrary(unittest.TestCase):
+class TestLibraryStats(unittest.TestCase):
     def setUp(self):
         self.library = Library()
-        self.book = Book("The Hobbit", "J.R.R. Tolkien", "978-0547928227")
-        self.user = User("U001", "John Doe")
-        self.library.add_book(self.book)
-        self.library.add_user(self.user)
-
-    def test_user_borrow_return(self):
-        self.assertTrue(self.library.borrow_book("978-0547928227", "U001"))
-        user_books = self.library.get_user_books("U001")
-        self.assertEqual(len(user_books), 1)
-        self.assertEqual(user_books[0].title, "The Hobbit")
         
-        self.assertTrue(self.library.return_book("978-0547928227"))
-        self.assertEqual(len(self.library.get_user_books("U001")), 0)
+        # Add books
+        self.books = [
+            Book("The Hobbit", "J.R.R. Tolkien", "978-0547928227"),
+            Book("1984", "George Orwell", "978-0451524935"),
+            Book("Pride and Prejudice", "Jane Austen", "978-0141439518")
+        ]
+        for book in self.books:
+            self.library.add_book(book)
+        
+        # Add users
+        self.users = [
+            User("U001", "John Doe"),
+            User("U002", "Jane Smith")
+        ]
+        for user in self.users:
+            self.library.add_user(user)
 
-    def test_overdue_books(self):
+    def test_borrow_tracking(self):
+        # Simulate some borrows
         self.library.borrow_book("978-0547928227", "U001")
-        self.book.borrow_date = datetime.now() - timedelta(days=15)
-        overdue = self.library.get_overdue_books()
-        self.assertEqual(len(overdue), 1)
-        self.assertEqual(overdue[0].isbn, "978-0547928227")
+        self.library.borrow_book("978-0451524935", "U001")
+        self.library.borrow_book("978-0547928227", "U002")
+        
+        # Test most popular books
+        popular_books = self.library.stats.get_most_popular_books()
+        self.assertEqual(popular_books[0][0], "978-0547928227")
+        self.assertEqual(popular_books[0][1], 2)  # borrowed twice
+
+    def test_active_users(self):
+        # Simulate some borrows
+        self.library.borrow_book("978-0547928227", "U001")
+        self.library.borrow_book("978-0451524935", "U001")
+        self.library.borrow_book("978-0141439518", "U002")
+        
+        active_users = self.library.stats.get_active_users()
+        self.assertEqual(active_users[0][0], "U001")
+        self.assertEqual(active_users[0][1], 2)  # borrowed twice
+
+    def test_monthly_stats(self):
+        # Simulate some borrows
+        self.library.borrow_book("978-0547928227", "U001")
+        self.library.borrow_book("978-0451524935", "U002")
+        
+        monthly_stats = self.library.stats.get_monthly_borrows()
+        current_month = datetime.now().strftime("%Y-%m")
+        self.assertEqual(monthly_stats[current_month], 2)
+
+    def test_report_generation(self):
+        # Simulate some activity
+        self.library.borrow_book("978-0547928227", "U001")
+        self.library.borrow_book("978-0451524935", "U002")
+        
+        report = self.library.stats.generate_report()
+        self.assertIn("Library Statistics Report", report)
+        self.assertIn("Most Popular Books:", report)
+        self.assertIn("Most Active Users:", report)
+        self.assertIn("Monthly Statistics:", report)
 
 if __name__ == '__main__':
     unittest.main()

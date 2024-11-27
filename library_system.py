@@ -2,12 +2,14 @@
 
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
+from library_stats import LibraryStatistics  # Add this import
 
 class User:
     def __init__(self, user_id: str, name: str):
         self.user_id = user_id
         self.name = name
         self.borrowed_books: Dict[str, datetime] = {}  # isbn -> borrow_date
+        self.stats = LibraryStatistics(self)  # Add this line
 
 class Book:
     def __init__(self, title: str, author: str, isbn: str):
@@ -80,6 +82,9 @@ class Library:
         if not user:
             return []
         return [self.books[isbn] for isbn in user.borrowed_books]
+    
+    def get_statistics_report(self) -> str:
+        return self.stats.generate_report()
 
 # Example usage
 if __name__ == "__main__":
